@@ -13,7 +13,7 @@ const CATEGORIES = [
   { id: "other", name: "Other", icon: "🔖" },
 ];
 
-function CreateTransaction() {
+export default function CreateTransaction() {
   const { user } = useUser();
   const navigate = useNavigate();
   const { createTransaction } = useTransactions(user?.id);
@@ -115,4 +115,3 @@ function CreateTransaction() {
   );
 }
 
-export default CreateTransaction;

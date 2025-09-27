@@ -4,14 +4,16 @@ import { useTransactions } from "../hooks/useTransactions";
 import { formatDate } from "../hooks/utils";
 import CreateTransaction from "../components/CreateTransaction";
 import BreakdownChart from "../components/BreakdownChart";
-import TransactionsList from "../components/TransactionsList";
 import "./styles/Dashboard.css";
 import PaginatedTransactions from "../components/PaginatedTransactions";
+import Summary from "../components/Summary";
+import DateRangeFilter from "../components/DateRangeFiller";
 
 
 export default function Dashboard() {
   const { user } = useUser();
   const [refreshing, setRefreshing] = useState(false);
+  const [dateRange, setDateRange] = useState({ low: null, high: null });
 
   const { transactions, summary, breakdown ,isLoading, loadData, deleteTransaction } =
     useTransactions(user?.id);
@@ -33,11 +35,11 @@ export default function Dashboard() {
   };
 
   if (isLoading && !refreshing) {
-    return <div className="loader">Loading...</div>;
+    return <div className="flex justify-center items-center h-screen text-lg font-semibold">Loading...</div>;
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50 p-6">
       {/* Navbar */}
       <div className="navbar">
       <h2>Welcome to Cashly, {user?.emailAddresses[0]?.emailAddress.split("@")[0]} !!</h2>
@@ -45,21 +47,32 @@ export default function Dashboard() {
         <UserButton afterSignOutUrl="/login" />
       </div>
 
-      {/* SUMMARY CARDS */}
-      <div className="summary-cards">
-        <div className="card balance">
-          <h3>Balance</h3>
-          <p>${parseFloat(summary.balance).toFixed(2)}</p>
-        </div>
-        <div className="card income">
-          <h3>Income</h3>
-          <p>${parseFloat(summary.income).toFixed(2)}</p>
-        </div>
-        <div className="card expenses">
-          <h3>Expenses</h3>
-          <p>-${Math.abs(parseFloat(summary.expenses)).toFixed(2)}</p>
-        </div>
+      {/* Date Range Filter */}
+      <DateRangeFilter
+        onApply={(low, high) => {
+          setDateRange({ low, high });
+          loadData(low, high)}
+        }
+        onReset={() => {
+          setDateRange({ low: null, high: null });
+          loadData()}}
+      />
+
+      {/* Show active date range */}
+      <div className="mt-4 text-center">
+        {dateRange.low && dateRange.high ? (
+          <p className="text-sm font-semibold text-gray-700 bg-gray-100 inline-block px-4 py-2 rounded-lg shadow">
+            Showing from {formatDate(dateRange.low)} to {formatDate(dateRange.high)}
+          </p>
+          ):<p className="text-sm font-semibold text-gray-700 bg-gray-100 inline-block px-4 py-2 rounded-lg shadow">
+            Showing all Transactions
+          </p> 
+        }
       </div>
+      
+
+      {/* SUMMARY CARDS */}
+      <Summary summary={summary} />
 
       {/* Breakdown Pie Chart */}
       <BreakdownChart breakdown={breakdown} />
@@ -68,11 +81,11 @@ export default function Dashboard() {
       <CreateTransaction />
 
       {/* TRANSACTIONS */}
-      {/* <TransactionsList transactions={transactions} handleDelete={handleDelete} /> */}
+      <button onClick={handleRefresh} disabled={refreshing}
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50">
+        {refreshing ? "Refreshing..." : "Refresh"}
+      </button>
       <h3>Recent Transactions</h3>
-          <button onClick={handleRefresh} disabled={refreshing}>
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </button>
       <PaginatedTransactions transactions={transactions} handleDelete={handleDelete} />
       
 

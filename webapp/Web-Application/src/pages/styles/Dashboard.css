@@ -1,4 +1,5 @@
 /* Dashboard.css */
+@import "tailwindcss";
 
 .navbar {
     display: flex;

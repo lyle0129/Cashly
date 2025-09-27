@@ -14,10 +14,16 @@ export const useTransactions = (userId) => {
   const [isLoading, setIsLoading] = useState(true);
   const [breakdown, setBreakdown] = useState({ income: [], expenses: [] });
 
+   // Utility: build query string if dates provided
+   const buildQuery = (lowDate, highDate) => {
+    return lowDate && highDate ? `?lowdate=${lowDate}&highdate=${highDate}` : "";
+  };
+
   // useCallback is used for performance reasons, it will memoize the function
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = useCallback(async (lowDate, highDate) => {
     try {
-      const response = await fetch(`${API_URL}/transactions/${userId}`);
+      const query = buildQuery(lowDate, highDate);
+      const response = await fetch(`${API_URL}/transactions/${userId}${query}`);
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
@@ -25,9 +31,10 @@ export const useTransactions = (userId) => {
     }
   }, [userId]);
 
-  const fetchSummary = useCallback(async () => {
+  const fetchSummary = useCallback(async (lowDate, highDate) => {
     try {
-      const response = await fetch(`${API_URL}/transactions/summary/${userId}`);
+      const query = buildQuery(lowDate, highDate);
+      const response = await fetch(`${API_URL}/transactions/summary/${userId}${query}`);
       const data = await response.json();
       setSummary(data);
     } catch (error) {
@@ -35,9 +42,10 @@ export const useTransactions = (userId) => {
     }
   }, [userId]);
 
-  const fetchBreakdown = useCallback(async () => {
+  const fetchBreakdown = useCallback(async (lowDate, highDate) => {
     try {
-      const response = await fetch(`${API_URL}/transactions/breakdown/${userId}`);
+      const query = buildQuery(lowDate, highDate);
+      const response = await fetch(`${API_URL}/transactions/breakdown/${userId}${query}`);
       const data = await response.json();
       setBreakdown(data);
     } catch (error) {
@@ -45,13 +53,17 @@ export const useTransactions = (userId) => {
     }
   }, [userId]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (lowDate, highDate) => {
     if (!userId) return;
 
     setIsLoading(true);
     try {
       // can be run in parallel
-      await Promise.all([fetchTransactions(), fetchSummary(), fetchBreakdown()]);
+      await Promise.all(
+        [fetchTransactions(lowDate, highDate), 
+          fetchSummary(lowDate, highDate), 
+          fetchBreakdown(lowDate, highDate)]
+        );
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -59,6 +71,7 @@ export const useTransactions = (userId) => {
     }
   }, [fetchTransactions, fetchSummary, fetchBreakdown, userId]);
 
+  // ---------- Creating and deleting transactions can be found here ---------- //
   const deleteTransaction = async (id) => {
     try {
       const response = await fetch(`${API_URL}/transactions/${id}`, { method: "DELETE" });
@@ -93,5 +106,13 @@ export const useTransactions = (userId) => {
     }
   };
 
-  return { transactions, summary, breakdown, isLoading, loadData, deleteTransaction, createTransaction,};
+  return { 
+    transactions, 
+    summary, 
+    breakdown, 
+    isLoading, 
+    loadData, 
+    deleteTransaction, 
+    createTransaction,
+  };
 };
