@@ -1,10 +1,17 @@
 import express from "express";
 import dotenv from "dotenv";
 import {sql} from "./config/db.js"; 
+import cors from "cors";   // ✅ add this
 
 dotenv.config();
 
 const app = express()
+
+// ✅ Enable CORS for your frontend
+app.use(cors({
+    origin: "http://localhost:5173", // React dev server
+    methods: ["GET", "POST", "DELETE"],
+  }));
 
 // Middleware, basically need ito so that it could translate yung sa req.body
 app.use(express.json());
@@ -35,10 +42,18 @@ app.get("/api/transactions/:userId", async (req,res) => {
     try {
         // need to be the same as above in the get function
         const {userId} = req.params;
+        const { lowdate, highdate } = req.query;
+        console.log(highdate);
+
+        const dateFilter = (lowdate && highdate)
+            ? sql` AND created_at BETWEEN ${lowdate} AND ${highdate} `
+            : sql` `;
+
         const transactions = await sql`
-        SELECT * FROM transactions WHERE user_id = ${userId} ORDER BY created_at DESC
+        SELECT * FROM transactions WHERE user_id = ${userId}${dateFilter}
+        ORDER BY created_at DESC 
         `;
-        console.log(transactions)
+        // console.log(transactions)
         res.status(200).json(transactions);
     } catch (error) {
         console.log("Error getting the transactions", error)
@@ -120,6 +135,61 @@ app.get("/api/transactions/summary/:userId", async(req,res) =>{
     }
 })
 
+// Getting the category breakdown (for charts)
+app.get("/api/transactions/breakdown/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { lowdate, highdate } = req.query;
+
+      const dateFilter = (lowdate && highdate)
+        ? sql`AND created_at BETWEEN ${lowdate} AND ${highdate}`
+        : sql``;
+
+      // Expenses grouped by category
+      const expenseResults = await sql`
+        SELECT category, ABS(SUM(amount)) AS total
+        FROM transactions
+        WHERE user_id = ${userId} AND amount < 0 ${dateFilter}
+        GROUP BY category
+        ORDER BY total DESC
+      `;
+  
+      // Income grouped by category
+      const incomeResults = await sql`
+        SELECT category, SUM(amount) AS total
+        FROM transactions
+        WHERE user_id = ${userId} AND amount > 0 ${dateFilter}
+        GROUP BY category
+        ORDER BY total DESC
+      `;
+  
+      res.status(200).json({
+        expenses: expenseResults,
+        income: incomeResults,
+      });
+    } catch (error) {
+      console.log("Error getting breakdown:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+
+// Selecting the transaction in between the dates 
+// -- scrapped because now we are just using query that way if front end have no filter, we can just query as normal
+app.get("/api/transactions/:userId/:lowdate/:highdate", async (req,res) => {
+    try {
+        // need to be the same as above in the get function
+        const {userId, lowdate, highdate} = req.params;
+        const transactions = await sql`
+        SELECT * FROM transactions WHERE user_id = ${userId} AND created_at BETWEEN ${lowdate} AND ${highdate}
+        `;
+        // console.log(transactions)
+        res.status(200).json(transactions);
+    } catch (error) {
+        console.log("Error getting span dated transactions", error)
+        res.status(500).json({message: "Internal server Error" });
+    }
+})
+
 initDB().then( () => {
     app.listen(PORT, () =>
         {
@@ -127,5 +197,5 @@ initDB().then( () => {
         });
 })
 
-// Note: i did not ratelimit, but its a good addition to be added eventually...
-// Additionally, i did not do the routing since the project is relatively small, but if i had free time maybe i would add that eventually
+
+
