@@ -3,9 +3,13 @@ import dotenv from "dotenv";
 import {sql} from "./config/db.js"; 
 import cors from "cors";   // ✅ add this
 
+import job from "./config/cron.js"
+
 dotenv.config();
 
 const app = express()
+
+if (process.env.NODE_ENV==="production")job.start();
 
 // ✅ Enable CORS for your frontend
 app.use(cors({
@@ -26,7 +30,7 @@ async function initDB(){
         title VARCHAR(255) NOT NULL,
         amount DECIMAL(10,2) NOT NULL,
         category VARCHAR(255) NOT NULL,
-        created_at DATE NOT NULL DEFAULT CURRENT_DATE
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )`
 
         console.log("Database initialized successfully")
@@ -36,6 +40,10 @@ async function initDB(){
     }
 }
 
+app.get("/api/health", (req,res) => {
+    res.status(200).json({statis:"ok"})
+})
+
 // For getting a transactions of a user //
 // we put `:` since it is dynamic
 app.get("/api/transactions/:userId", async (req,res) => {
@@ -43,7 +51,6 @@ app.get("/api/transactions/:userId", async (req,res) => {
         // need to be the same as above in the get function
         const {userId} = req.params;
         const { lowdate, highdate } = req.query;
-        console.log(highdate);
 
         const dateFilter = (lowdate && highdate)
             ? sql` AND created_at BETWEEN ${lowdate} AND ${highdate} `

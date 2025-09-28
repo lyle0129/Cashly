@@ -1,8 +1,8 @@
 // react custom hook file
 import { useCallback, useState } from "react";
 
-// const API_URL = "https://wallet-api-cxqp.onrender.com/api";
-const API_URL = "http://localhost:5001/api";
+const API_URL = "https://backend-cashly.onrender.com/api";
+// const API_URL = "http://localhost:5001/api";
 
 export const useTransactions = (userId) => {
   const [transactions, setTransactions] = useState([]);
@@ -76,7 +76,7 @@ export const useTransactions = (userId) => {
     try {
       const response = await fetch(`${API_URL}/transactions/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete transaction");
-      window.alert("Transaction deleted!");
+      // window.alert("Transaction deleted!");
 
       // Refresh data after deletion
       loadData();
