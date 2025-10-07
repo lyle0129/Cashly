@@ -14,11 +14,6 @@ Cashly is a cross-platform wallet & expense tracking web application (with compa
   - [Prerequisites](#prerequisites)  
   - [Setup Backend](#setup-backend)  
   - [Setup Frontend](#setup-frontend)  
-- [Environment Variables](#environment-variables)  
-- [Database / SQL](#database--sql)  
-- [Date Filtering & Transaction Queries](#date-filtering--transaction-queries)  
-- [Deployment](#deployment)  
-- [Usage & Screenshots / Demo](#usage--screenshots--demo)  
 
 ---
 
