@@ -2,7 +2,9 @@
 
 Cashly is a cross-platform wallet & expense tracking web application (with companion mobile support) built with modern technologies. It supports authenticated user accounts, transaction management (with date filtering), and is styled responsively for both desktop and mobile screens.
 
-[Live Web App](https://cashly-web.vercel.app)  
+# NOTE: a new release (CASHLY 2.0) is out with updated features and technologies.  
+
+[Live Web App](https://cashly-2-0.vercel.app/)  
 
 ---
 
